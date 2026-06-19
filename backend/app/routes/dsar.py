@@ -1,7 +1,6 @@
 from uuid import uuid4
-
 from fastapi import APIRouter
-
+from app.services.audit import log_event
 from app.schemas.dsar import DSARRequestCreate
 
 router = APIRouter(
@@ -13,6 +12,11 @@ router = APIRouter(
 def create_dsar_request(request: DSARRequestCreate):
 
     request_id = str(uuid4())
+
+    log_event(
+        event="DSAR_REQUEST_CREATED",
+        request_id=request_id
+    )
 
     return {
         "request_id": request_id,
