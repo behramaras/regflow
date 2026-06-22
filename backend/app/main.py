@@ -1,11 +1,15 @@
 from fastapi import FastAPI
-
+from app.db.database import Base, engine
+from app.models.dsar import DSARRequest
 from app.routes.dsar import router as dsar_router
+
 
 app = FastAPI(
     title="Regflow",
     version="0.1.0"
 )
+
+Base.metadata.create_all(bind=engine)
 
 app.include_router(dsar_router)
 
