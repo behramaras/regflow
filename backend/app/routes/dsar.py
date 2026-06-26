@@ -1,8 +1,7 @@
 from uuid import uuid4
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from app.services.audit import log_event
 from app.schemas.dsar import DSARRequestCreate
-from fastapi import Depends
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.dsar import DSARRequest
@@ -38,4 +37,29 @@ def create_dsar_request(
         "request_id": request_id,
         "message": "DSAR request submitted",
         "status": "pending_verification"
+    }
+
+@router.get("/{request_id}")
+def get_dsar_request(
+    request_id: str,
+    db: Session = Depends(get_db)
+):
+
+    dsar_request = (
+        db.query(DSARRequest)
+        .filter(DSARRequest.id == request_id)
+        .first()
+    )
+
+    if not dsar_request:
+        raise HTTPException(
+            status_code=404,
+            detail="DSAR request not found"
+        )
+
+    return {
+        "request_id": dsar_request.id,
+        "email": dsar_request.email,
+        "request_type": dsar_request.request_type,
+        "status": dsar_request.status
     }
