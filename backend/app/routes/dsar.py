@@ -5,6 +5,7 @@ from app.schemas.dsar import DSARRequestCreate
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.dsar import DSARRequest
+from app.schemas.dsar import DSARStatusUpdate
 
 router = APIRouter(
     prefix="/dsar",
@@ -62,4 +63,40 @@ def get_dsar_request(
         "email": dsar_request.email,
         "request_type": dsar_request.request_type,
         "status": dsar_request.status
+    }
+
+@router.patch("/{request_id}")
+def update_dsar_status(
+    request_id: str,
+    update: DSARStatusUpdate,
+    db: Session = Depends(get_db)
+):
+    dsar = db.query(DSARRequest).filter(
+        DSARRequest.id == request_id
+    ).first()
+
+    if not dsar:
+        raise HTTPException(
+            status_code=404,
+            detail="DSAR request not found"
+        )
+
+    old_status = dsar.status
+    dsar.status = update.status
+
+    db.commit()
+
+    log_event(
+    event="DSAR_STATUS_UPDATED",
+    request_id=request_id,
+    metadata={
+        "old_status": old_status,
+        "new_status": update.status
+    }
+)
+
+    return {
+        "request_id": request_id,
+        "old_status": old_status,
+        "new_status": update.status
     }
