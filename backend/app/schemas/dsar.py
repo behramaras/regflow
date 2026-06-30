@@ -10,3 +10,7 @@ class DSARRequestResponse(BaseModel):
     request_id: str
     status: str
     message: str
+
+class DSARStatusUpdate(BaseModel):
+    status: str
+    
